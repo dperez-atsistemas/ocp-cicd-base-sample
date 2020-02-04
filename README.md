@@ -1,6 +1,22 @@
-openshift-jee-sample
+openshift-cicd-base-sample
 ====================
 
-A sample app to be deployed on openshift environments
+A sample app with a jenkins pipeline to be deployed on openshift environments
 
-You can read more about it: http://www.mastertheboss.com/soa-cloud/openshift/java-ee-example-application-on-openshift
+- Prerequisites:
+
+    - An openshift cluster installed and configured.
+    - Credentials to access the cluster
+    - oc client and git installed
+  
+
+- Deploy instructions:
+
+    - Clone or download this repository and open the folder in terminal.
+    - Login to the cluster: oc login -u <user> <hostname>
+    - Run ./resources/deploy.sh (Execution time: around 5 minutes)
+    
+
+- Clean environment
+
+    - Run ./resources/deploy.sh --delete

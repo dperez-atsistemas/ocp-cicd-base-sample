@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: jenkins-lab
+objects:
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      labels:
+        app: ${APP_NAMESPACE}
+      name: ${APP_NAMESPACE}
+      namespace: ${APP_NAMESPACE}
+    spec:
+      failedBuildsHistoryLimit: 5
+      output:
+        to:
+          kind: ImageStreamTag
+          name: ${BUILD_IMG}
+      runPolicy: Serial
+      source:
+        git:
+          uri: ${GIT_URL}
+        type: Git
+      strategy:
+        sourceStrategy:
+          from:
+            kind: ImageStreamTag
+            name: wildfly:8.1
+            namespace: openshift
+        type: Source
+      successfulBuildsHistoryLimit: 5
+      triggers:
+      - type: ConfigChange
+      - imageChange:
+          type: ImageChange
+
+  - apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      namespace: ${APP_NAMESPACE}
+      labels:
+        app: ${APP_NAMESPACE}
+      name: ${APP_NAMESPACE}
+    spec:
+      replicas: 1
+      selector:
+        app: ${APP_NAMESPACE}
+        deploymentconfig: ${APP_NAMESPACE}
+      strategy:
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            app: ${APP_NAMESPACE}
+            deploymentconfig: ${APP_NAMESPACE}
+        spec:
+          containers:
+          - image: ${APP_IMAGE}
+            imagePullPolicy: Always
+            name: ${APP_NAMESPACE}
+            ports:
+            - containerPort: 8080
+              protocol: TCP
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          securityContext: {}
+      triggers:
+        - type: ConfigChange
+
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      namespace: ${APP_NAMESPACE}
+      labels:
+        app: ${APP_NAMESPACE}
+      name: ${APP_NAMESPACE}
+    spec:
+      ports:
+      - name: 8080-tcp
+        port: 8080
+        protocol: TCP
+        targetPort: 8080
+      selector:
+        app: ${APP_NAMESPACE}
+        deploymentconfig: ${APP_NAMESPACE}
+      sessionAffinity: None
+      type: ClusterIP
+
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      namespace: ${APP_NAMESPACE}
+      labels:
+        app: ${APP_NAMESPACE}
+      name: ${APP_NAMESPACE}
+    spec:
+      host: ${APP_URL}
+      port:
+        targetPort: 8080-tcp
+      to:
+        kind: Service
+        name: ${APP_NAMESPACE}
+        weight: 100
+      wildcardPolicy: None
+      
+
+      
+parameters:
+  - name: BUILD_IMG
+    value: "undef"
+  - name: APP_IMAGE
+    required: true
+  - name: APP_URL
+    required: true
+  - name: CICD_NAMESPACE
+    required: false
+    value: "ci-cd"
+  - name: APP_NAMESPACE
+    required: false
+    value: "appjava"
+  - name: GIT_URL
+    required: false
+    value: "http://gogs-op.io/gogs/openshift-jee-sample.git"
