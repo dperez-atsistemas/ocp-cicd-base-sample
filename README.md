@@ -14,9 +14,9 @@ A sample app with a jenkins pipeline to be deployed on openshift environments (T
 
     - Clone or download this repository and open the folder in terminal
     - Login to the cluster: `oc login -u <user> <hostname>`
-    - Run `./resources/deploy.sh` (Execution time: around 5 minutes)
+    - Run `./openshift/deploy.sh` (Execution time: around 5 minutes)
     
 
 - Clean environment
 
-    - Run `./resources/deploy.sh --delete`
+    - Run `./openshift/deploy.sh --delete`
